@@ -1,19 +1,21 @@
 name: NASA Secret Scan
 on:
-  workflow_dispatch:  # Bisa di-run manual
+  workflow_dispatch:
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
-        with:
-          arguments: --org=nasa --only-verified --json
-        continue-on-error: true
+      - name: Install TruffleHog
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Upload results
+      - name: Scan NASA Org
+        run: |
+          trufflehog github --org=nasa --only-verified --json --concurrency=10 > nasa_verified.json
+
+      - name: Upload Hasil
         uses: actions/upload-artifact@v4
         with:
           name: nasa-scan-results
-          path: results.txt
+          path: nasa_verified.json
