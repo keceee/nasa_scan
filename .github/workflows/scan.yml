@@ -1,28 +1,21 @@
-name: NASA Subdomain Scan
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'   # every 6 hours
+name: NASA Scan
+on: workflow_dispatch
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 'stable'
-      
       - name: Install httpx
-        run: go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-      
-      - name: Run httpx
-        run: $(go env GOPATH)/bin/httpx -l interesting_subs.txt -o results.txt -status-code -title -tech-detect -follow-redirects -threads 100 -timeout 5
-      
+        run: |
+          sudo apt update
+          sudo apt install -y golang-go
+          go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+      - name: Run scan
+        run: httpx -l interesting_subs.txt -o results.txt -status-code -title -tech-detect -follow-redirects -threads 50 -timeout 5
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: httpx-results
+          name: scan-results
           path: results.txt
