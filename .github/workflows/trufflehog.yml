@@ -1,21 +1,24 @@
-name: NASA Secret Scan
+name: NASA Subdomain Scan
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Install TruffleHog
+      - uses: actions/checkout@v4
+      - name: Install httpx
         run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
-
-      - name: Scan NASA Org
-        run: |
-          trufflehog github --org=nasa --only-verified --json --concurrency=10 > nasa_verified.json
-
-      - name: Upload Hasil
+          sudo apt update
+          sudo apt install golang-go -y
+          go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+      - name: Run httpx
+        run: httpx -l interesting_subs.txt -o results.txt -status-code -title -tech-detect -follow-redirects -threads 100 -timeout 5
+      - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: nasa-scan-results
-          path: nasa_verified.json
+          name: httpx-results
+          path: results.txt
