@@ -9,14 +9,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+      
       - name: Install httpx
-        run: |
-          sudo apt update
-          sudo apt install golang-go -y
-          go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-          echo "$HOME/go/bin" >> $GITHUB_PATH
+        run: go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+      
       - name: Run httpx
-        run: httpx -l interesting_subs.txt -o results.txt -status-code -title -tech-detect -follow-redirects -threads 100 -timeout 5
+        run: $(go env GOPATH)/bin/httpx -l interesting_subs.txt -o results.txt -status-code -title -tech-detect -follow-redirects -threads 100 -timeout 5
+      
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
